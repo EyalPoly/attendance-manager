@@ -1,10 +1,41 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const validateAttendanceRequest = require('../middlewares/validateAttendanceParamRequest');
-const attendanceController = require('../controllers/attendanceController');
+const logger = require("../configs/logger");
+const {
+  validateAttendanceParams,
+  validateAttendanceBody,
+} = require("../middlewares/attendanceValidation");
+const attendanceController = require("../controllers/attendanceController");
 
+router.get(
+  "/:year/:month",
+  validateAttendanceParams,
+  attendanceController.getAttendanceData
+);
+router.post(
+  "/:year/:month",
+  validateAttendanceParams,
+  validateAttendanceBody,
+  attendanceController.createAttendanceData
+);
+router.put(
+  "/:year/:month",
+  validateAttendanceParams,
+  validateAttendanceBody,
+  attendanceController.updateAttendanceData
+);
+router.delete(
+  "/:year/:month",
+  validateAttendanceParams,
+  attendanceController.deleteAttendanceData
+);
 
-router.get('/:year/:month', attendanceController.getAttendanceData);
-router.post('/:year/:month', attendanceController.createAttendanceData);
+// Error handling middleware for this router
+router.use((err, req, res, next) => {
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal server error",
+  });
+});
 
 module.exports = router;
