@@ -10,7 +10,7 @@ const {
 
 jest.mock("../src/services/attendanceService", () => ({
   createAttendanceRecord: jest.fn(),
-  getAttendanceData: jest.fn(),
+  getAttendanceRecord: jest.fn(),
   updateAttendanceRecord: jest.fn(),
   deleteAttendanceRecord: jest.fn(),
 }));
@@ -124,13 +124,13 @@ describe("AttendanceController", () => {
 
   describe("getAttendanceRecord", () => {
     it("should return 200 and get attendance record", async () => {
-      attendanceService.getAttendanceData.mockResolvedValue(
+      attendanceService.getAttendanceRecord.mockResolvedValue(
         mockAttendanceRecord
       );
 
       const res = await request(app).get("/attendance");
 
-      expect(attendanceService.getAttendanceData).toHaveBeenCalledWith(
+      expect(attendanceService.getAttendanceRecord).toHaveBeenCalledWith(
         userId,
         validParams.year,
         validParams.month
@@ -141,7 +141,7 @@ describe("AttendanceController", () => {
     });
 
     it("should handle errors", async () => {
-      attendanceService.getAttendanceData.mockRejectedValue(
+      attendanceService.getAttendanceRecord.mockRejectedValue(
         new Error("Failed to get attendance record")
       );
 
@@ -151,7 +151,7 @@ describe("AttendanceController", () => {
     });
 
     it("should return 404 if attendance record not found", async () => {
-      attendanceService.getAttendanceData.mockResolvedValue(null);
+      attendanceService.getAttendanceRecord.mockResolvedValue(null);
 
       const res = await request(app).get("/attendance");
 
