@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const dayDataSchema = new mongoose.Schema({
   workplace: { type: String, required: true },
@@ -31,4 +31,4 @@ const attendanceDataSchema = new mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model('Attendance', attendanceSchema);
+module.exports = mongoose.model('attendance_records', attendanceDataSchema);

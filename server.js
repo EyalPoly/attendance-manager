@@ -1,30 +1,40 @@
-const express = require('express');
-const app = express();
-app.use(express.json());
-require('dotenv').config();
+const express = require("express");
+require("dotenv").config();
+const Database = require("./src/configs/Database");
+const attendanceRouter = require("./src/routes/attendanceRoutes");
+const Logger = require("./src/configs/Logger");
 
-// MongoDB Connection
-const mongoose = require('mongoose');
-mongoose.connect(process.env.DATABASE_URL); 
-const db = mongoose.connection;
-db.on('error', (error) => console.error(error)).once('open', () => console.log('Connected to database'));
+const logger = new Logger();
 
-const attendanceRouter = require('./src/routes/attendanceRoute');
+function createApp() {
+  const app = express();
+  app.use(express.json());
+  app.use("/api/v1/attendance", attendanceRouter);
+  app.use((req, res) => {
+    res.status(404).json({ error: "Route not found" });
+  });
+  return app;
+}
 
-app.use('/api/v1/attendance', attendanceRouter);
+async function startServer() {
+  try {
+    const app = createApp();
+    const database = new Database();
+    await database.connect();
 
+    const port = process.env.PORT || 3000;
+    app.listen(port, () => {
+      logger.info(`Server is running on port ${port}`);
+    });
+  } catch (err) {
+    logger.error("Failed to start server:", err);
+    process.exit(1);
+  }
+}
 
+// Only start the server if this file is being run directly
+if (require.main === module) {
+  startServer();
+}
 
-
-
-
-
-
-
-
-
-
-
-app.listen (process.env.PORT || 3000, () => {
-    console.log('Server is running on port 3000');
-});
+module.exports = { createApp };
