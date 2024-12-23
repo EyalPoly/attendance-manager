@@ -1,10 +1,24 @@
-const logger = require("../configs/logger");
+const Logger = require("../configs/Logger");
+const logger = new Logger();
 const AttendanceData = require("../models/attendanceData");
 
 class AttendanceService {
-  async getAttendanceData(year, month) {}
+  async getAttendanceRecord(userId, year, month) {
+    try {
+      const attendanceDataRecord = await AttendanceData.findOne({
+        userId: userId,
+        year: year,
+        month: month,
+      });
 
-  async createAttendanceData(userId, year, month, data) {
+      return attendanceDataRecord;
+    } catch (error) {
+      logger.error("Error in getAttendanceData: ", error);
+      throw error;
+    }
+  }
+
+  async createAttendanceRecord(userId, year, month, data) {
     try {
       const attendanceDataRecord = await AttendanceData.findOne({
         userId: userId,
@@ -35,9 +49,9 @@ class AttendanceService {
     }
   }
 
-  async updateAttendanceData(year, month, attendanceRecords) {}
+  async updateAttendanceRecord(year, month, attendanceRecords) {}
 
-  async deleteAttendanceData(year, month) {}
+  async deleteAttendanceRecord(year, month) {}
 
   async saveAttendanceDocument(userId, year, month, data) {
     try {

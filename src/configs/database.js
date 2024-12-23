@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
-const logger = require("./logger");
+const Logger = require("./Logger");
+const logger = new Logger();
 
 class Database {
   constructor() {
@@ -43,11 +44,10 @@ class Database {
       });
 
       await mongoose.connect(this.mongoURI, this.options);
-  
+
       this.startConnectionMonitoring();
 
       return mongoose.connection;
-
     } catch (err) {
       logger.error("Failed to connect to MongoDB:", {
         error: err.message || "Unknown error",
@@ -87,4 +87,4 @@ class Database {
   }
 }
 
-module.exports = new Database();
+module.exports = Database;

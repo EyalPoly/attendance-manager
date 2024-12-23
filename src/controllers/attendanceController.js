@@ -1,48 +1,81 @@
-const logger = require("../configs/logger");
+const Logger = require("../configs/Logger");
+const logger = new Logger();
 const attendanceService = require("../services/attendanceService");
 
 class AttendanceController {
-  async getAttendanceData(req, res, next) {
+  async getAttendanceRecord(req, res, next) {
     try {
       const { year, month } = req.validatedParams;
 
-      logger.info("Fetching attendance data", { year, month });
-      const data = await attendanceService.getAttendanceData(year, month);
+      const userId = "user123"; // Assume this is the user ID of the logged-in user
+
+      logger.info(
+        "Fetching attendance record: " +
+          year +
+          "/" +
+          month +
+          " for user: " +
+          userId
+      );
+      const data = await attendanceService.getAttendanceRecord(
+        userId,
+        year,
+        month
+      );
 
       if (!data || (Array.isArray(data) && data.length === 0)) {
-        logger.warn("No attendance data found", { year, month });
+        const notFoundMessage =
+          "No attendance records found for user: " +
+          userId +
+          " for the specified period: " +
+          year +
+          "/" +
+          month;
+        logger.warn(notFoundMessage);
+
         return res.status(404).json({
           success: false,
-          message: "No attendance records found for the specified period",
+          message: notFoundMessage,
         });
       }
 
-      logger.debug("Attendance data retrieved successfully", {
-        year,
-        month,
-        recordCount: data.length,
-      });
+      logger.debug(
+        "Attendance record: " +
+          year +
+          "/" +
+          month +
+          " for user: " +
+          userId +
+          " retrieved successfully: " +
+          data
+      );
 
       return res.status(200).json({
         success: true,
         data,
       });
     } catch (error) {
-      logger.error("Error in getAttendanceData", {
-        error: error.message,
-        stack: error.stack,
-      });
-      next();
+      next(error);
     }
   }
 
-  async createAttendanceData(req, res, next) {
+  async createAttendanceRecord(req, res, next) {
     try {
       const { year, month } = req.validatedParams;
       const data = req.body.data;
 
       const userId = "user123"; // Assume this is the user ID of the logged-in user
-      const result = await attendanceService.createAttendanceData(
+
+      logger.info(
+        "Creating attendance record for user: " +
+          userId +
+          " for date: " +
+          year +
+          "/" +
+          month
+      );
+
+      const result = await attendanceService.createAttendanceRecord(
         userId,
         year,
         month,
@@ -59,21 +92,27 @@ class AttendanceController {
     }
   }
 
-  async updateAttendanceData(req, res, next) {
+  async updateAttendanceRecord(req, res, next) {
     try {
       const { year, month } = req.validatedParams;
-      const { attendance } = req.body;
+      const data = req.body.data;
 
-      logger.info("Updating attendance records", {
+      const userId = "user123"; // Assume this is the user ID of the logged-in user
+
+      logger.info(
+        "Updating attendance record for user: " +
+          userId +
+          " for date: " +
+          year +
+          "/" +
+          month
+      );
+
+      const result = await attendanceService.updateAttendanceRecord(
+        userId,
         year,
         month,
-        recordCount: attendance.length,
-      });
-
-      const result = await attendanceService.updateAttendanceData(
-        year,
-        month,
-        attendance
+        data
       );
 
       return res.status(200).json({
@@ -90,11 +129,18 @@ class AttendanceController {
     }
   }
 
-  async deleteAttendanceData(req, res, next) {
+  async deleteAttendanceRecord(req, res, next) {
     try {
       const { year, month } = req.validatedParams;
 
-      logger.info("Deleting attendance records", { year, month });
+      const userId = "user123"; // Assume this is the user ID of the logged-in user
+
+      logger.info(
+        "Deleting attendance records",
+        year + "/" + month,
+        "for user",
+        userId
+      );
 
       await attendanceService.deleteAttendanceData(year, month);
 

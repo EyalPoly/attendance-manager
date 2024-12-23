@@ -1,22 +1,30 @@
 const express = require("express");
-const app = express();
 require("dotenv").config();
-const logger = require("./src/configs/logger");
-const database = require("./src/configs/database");
-const attendanceRouter = require("./src/routes/attendanceRoute");
+const Database = require("./src/configs/Database");
+const attendanceRouter = require("./src/routes/attendanceRoutes");
+const Logger = require("./src/configs/Logger");
+
+const logger = new Logger();
+
+function createApp() {
+  const app = express();
+  app.use(express.json());
+  app.use("/api/v1/attendance", attendanceRouter);
+  app.use((req, res) => {
+    res.status(404).json({ error: "Route not found" });
+  });
+  return app;
+}
 
 async function startServer() {
   try {
-    app.use(express.json());
-    app.use("/api/v1/attendance", attendanceRouter);
-    app.use((req, res, next) => {
-      res.status(404).json({ error: "Route not found" });
-    });
-
+    const app = createApp();
+    const database = new Database();
     await database.connect();
 
-    app.listen(process.env.PORT || 3000, () => {
-      logger.info(`Server is running on port ${process.env.PORT || 3000}`);
+    const port = process.env.PORT || 3000;
+    app.listen(port, () => {
+      logger.info(`Server is running on port ${port}`);
     });
   } catch (err) {
     logger.error("Failed to start server:", err);
@@ -24,4 +32,9 @@ async function startServer() {
   }
 }
 
-startServer();
+// Only start the server if this file is being run directly
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = { createApp };

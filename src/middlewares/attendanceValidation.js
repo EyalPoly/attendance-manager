@@ -1,23 +1,24 @@
 const { param, validationResult, checkSchema } = require("express-validator");
 
-const validateAttendanceParams = (req, res, next) => {
-  param("year").isNumeric().withMessage("Year must be a number");
-  param("month").isNumeric().withMessage("Month must be a number");
-
-  param("year")
+const validateAttendanceParams = async (req, res, next) => {
+  await param("year").isNumeric().withMessage("Year must be a number").run(req);
+  await param("year")
     .isLength({ min: 4, max: 4 })
-    .withMessage("Year must be 4 digits");
-  param("month")
+    .withMessage("Year must be 4 digits")
+    .run(req);
+
+  await param("month")
+    .isNumeric()
+    .withMessage("Month must be a number")
+    .run(req);
+  await param("month")
+    .isInt({ min: 1, max: 12 })
+    .withMessage("Month must be between 1 and 12")
+    .run(req);
+  await param("month")
     .isLength({ min: 2, max: 2 })
-    .withMessage("Month must be 2 digits");
-
-  param("month").custom((value) => {
-    if (value < 1 || value > 12) {
-      throw new Error("Month must be between 01 and 12");
-    }
-    return true;
-  });
-
+    .withMessage("Month must be 2 digits").run(req);
+    
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
@@ -32,7 +33,9 @@ const validateAttendanceParams = (req, res, next) => {
 };
 
 const validateAttendanceBody = async (req, res, next) => {
-  await Promise.all(validateAttendanceSchema.map(validation => validation.run(req)));
+  await Promise.all(
+    validateAttendanceSchema.map((validation) => validation.run(req))
+  );
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });

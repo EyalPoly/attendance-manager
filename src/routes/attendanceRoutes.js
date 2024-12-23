@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const logger = require("../configs/logger");
+
 const {
   validateAttendanceParams,
   validateAttendanceBody,
@@ -10,24 +10,24 @@ const attendanceController = require("../controllers/attendanceController");
 router.get(
   "/:year/:month",
   validateAttendanceParams,
-  attendanceController.getAttendanceData
+  attendanceController.getAttendanceRecord
 );
 router.post(
   "/:year/:month",
   validateAttendanceParams,
   validateAttendanceBody,
-  attendanceController.createAttendanceData
+  attendanceController.createAttendanceRecord
 );
 router.put(
   "/:year/:month",
   validateAttendanceParams,
   validateAttendanceBody,
-  attendanceController.updateAttendanceData
+  attendanceController.updateAttendanceRecord
 );
 router.delete(
   "/:year/:month",
   validateAttendanceParams,
-  attendanceController.deleteAttendanceData
+  attendanceController.deleteAttendanceRecord
 );
 
 // Error handling middleware for this router

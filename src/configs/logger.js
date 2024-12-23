@@ -3,81 +3,155 @@ const path = require("path");
 const fs = require("fs");
 const DailyRotateFile = require("winston-daily-rotate-file");
 
-const rootDir = path.resolve(process.cwd());
-const combinedLogsDir = path.join(rootDir, "logs", "combined");
-const errorLogsDir = path.join(rootDir, "logs", "errors");
+class Logger {
+  constructor(options = {}) {
+    this.rootDir = options.rootDir || process.cwd();
+    this.combinedLogsDir =
+      options.combinedLogsDir || path.join(this.rootDir, "logs", "combined");
+    this.errorLogsDir =
+      options.errorLogsDir || path.join(this.rootDir, "logs", "errors");
+    this.logLevel = options.logLevel || process.env.LOG_LEVEL || "info";
 
-[combinedLogsDir, errorLogsDir].forEach((dir) => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+    this.createLogDirectories();
+    this.setupFormats();
+    this.setupCustomLevels();
+    this.setupTransports();
+    this.createLogger();
   }
-});
 
-const fileFormat = winston.format.combine(
-  winston.format.timestamp({
-    format: "YYYY-MM-DD HH:mm:ss",
-  }),
-  winston.format.prettyPrint({
-    depth: 5,
-  }),
-  winston.format.printf(
-    (info) => `${info.timestamp} ${info.level}: ${info.message}`
-  )
-);
+  createLogDirectories() {
+    [this.combinedLogsDir, this.errorLogsDir].forEach((dir) => {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+    });
+  }
 
-const consoleFormat = winston.format.combine(
-  winston.format.colorize(),
-  winston.format.timestamp({
-    format: "YYYY-MM-DD HH:mm:ss",
-  }),
-  winston.format.prettyPrint({
-    depth: 5,
-  }),
-  winston.format.printf(
-    (info) => `${info.timestamp} ${info.level}: ${info.message}`
-  )
-);
+  setupFormats() {
+    this.fileFormat = winston.format.combine(
+      winston.format.timestamp({
+        format: "YYYY-MM-DD HH:mm:ss",
+      }),
+      winston.format.prettyPrint({
+        depth: 5,
+      }),
+      winston.format.printf(
+        (info) => `${info.timestamp} ${info.level}: ${info.message}`
+      )
+    );
 
-const consoleTransport = new winston.transports.Console({
-  format: consoleFormat,
-});
+    this.consoleFormat = winston.format.combine(
+      winston.format.colorize(),
+      winston.format.timestamp({
+        format: "YYYY-MM-DD HH:mm:ss",
+      }),
+      winston.format.prettyPrint({
+        depth: 5,
+      }),
+      winston.format.printf(
+        (info) => `${info.timestamp} ${info.level}: ${info.message}`
+      )
+    );
+  }
 
-const combinedFileTransport = new DailyRotateFile({
-  filename: path.join(combinedLogsDir, "%DATE%_combined.log"),
-  format: fileFormat,
-  datePattern: "YYYY-MM-DD-HH",
-  maxSize: "2m",
-  maxFiles: "14d",
-});
+  setupCustomLevels() {
+    this.customLevels = {
+      levels: {
+        error: 0,
+        warn: 1,
+        info: 2,
+        debug: 3,
+      },
+      colors: {
+        error: "red",
+        warn: "yellow",
+        info: "green",
+      },
+    };
+    winston.addColors(this.customLevels.colors);
+  }
 
-const errorFileTransport = new DailyRotateFile({
-  filename: path.join(errorLogsDir, "%DATE%_error.log"),
-  level: "error",
-  format: fileFormat,
-  datePattern: "YYYY-MM-DD-HH",
-  maxSize: "2m",
-  maxFiles: "14d",
-});
+  setupTransports() {
+    this.consoleTransport = new winston.transports.Console({
+      format: this.consoleFormat,
+    });
 
-const customLevels = {
-  levels: {
-    error: 0,
-    warn: 1,
-    info: 2,
-    debug: 3,
-  },
-  colors: {
-    error: "red",
-    warn: "yellow",
-    info: "green",
-  },
-};
-winston.addColors(customLevels.colors);
+    this.combinedFileTransport = new DailyRotateFile({
+      filename: path.join(this.combinedLogsDir, "%DATE%_combined.log"),
+      format: this.fileFormat,
+      datePattern: "YYYY-MM-DD-HH",
+      maxSize: "2m",
+      maxFiles: "14d",
+      handleExceptions: true,
+      handleRejections: true,
+      zippedArchive: true,
+    });
 
-const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || "info",
-  levels: customLevels.levels,
-  transports: [errorFileTransport, combinedFileTransport, consoleTransport],
-});
+    this.errorFileTransport = new DailyRotateFile({
+      filename: path.join(this.errorLogsDir, "%DATE%_error.log"),
+      level: "error",
+      format: this.fileFormat,
+      datePattern: "YYYY-MM-DD-HH",
+      maxSize: "2m",
+      maxFiles: "14d",
+      handleExceptions: true,
+      handleRejections: true,
+      zippedArchive: true,
+    });
+  }
 
-module.exports = logger;
+  createLogger() {
+    this.logger = winston.createLogger({
+      level: this.logLevel,
+      levels: this.customLevels.levels,
+      transports: [
+        this.errorFileTransport,
+        this.combinedFileTransport,
+        this.consoleTransport,
+      ],
+    });
+  }
+
+  error(message, meta = {}) {
+    this.logger.error(message, meta);
+  }
+
+  warn(message, meta = {}) {
+    this.logger.warn(message, meta);
+  }
+
+  info(message, meta = {}) {
+    this.logger.info(message, meta);
+  }
+
+  debug(message, meta = {}) {
+    this.logger.debug(message, meta);
+  }
+
+  updateLogDirectories(combinedPath, errorPath) {
+    this.combinedLogsDir = combinedPath;
+    this.errorLogsDir = errorPath;
+    this.createLogDirectories();
+    this.setupTransports();
+    this.createLogger();
+  }
+
+  setLogLevel(level) {
+    this.logLevel = level;
+    this.logger.level = level;
+  }
+
+  // Method to add correlation ID middleware for Express
+  correlationMiddleware() {
+    return (req, res, next) => {
+      this.logger.defaultMeta = {
+        requestId: req.id || require("crypto").randomUUID(),
+        path: req.path,
+        method: req.method,
+      };
+      next();
+    };
+  }
+}
+
+module.exports = Logger;
