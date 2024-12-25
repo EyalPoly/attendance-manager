@@ -17,26 +17,19 @@ class AttendanceController {
           " for user: " +
           userId
       );
-      const data = await attendanceService.getAttendanceRecord(
+      const record = await attendanceService.getAttendanceRecord(
         userId,
         year,
         month
       );
 
-      if (!data || (Array.isArray(data) && data.length === 0)) {
-        const notFoundMessage =
-          "No attendance records found for user: " +
-          userId +
-          " for the specified period: " +
-          year +
-          "/" +
-          month;
-        logger.warn(notFoundMessage);
-
-        return res.status(404).json({
-          success: false,
-          message: notFoundMessage,
-        });
+      if (!record) {
+        return AttendanceController.resourceNotFoundResponse(
+          res,
+          userId,
+          year,
+          month
+        );
       }
 
       logger.debug(
@@ -47,12 +40,12 @@ class AttendanceController {
           " for user: " +
           userId +
           " retrieved successfully: " +
-          data
+          record
       );
 
       return res.status(200).json({
         success: true,
-        data,
+        data: record,
       });
     } catch (error) {
       next(error);
@@ -75,7 +68,26 @@ class AttendanceController {
           month
       );
 
-      const result = await attendanceService.createAttendanceRecord(
+      const existingRecord = await attendanceService.getAttendanceRecord(
+        userId,
+        year,
+        month
+      );
+      if (existingRecord) {
+        const error = new Error(
+          "Attendance record for user: " +
+            userId +
+            " for date: " +
+            year +
+            "/" +
+            month +
+            " already exists"
+        );
+        error.status = 409;
+        throw error;
+      }
+
+      const record = await attendanceService.createAttendanceRecord(
         userId,
         year,
         month,
@@ -85,7 +97,7 @@ class AttendanceController {
       return res.status(201).json({
         success: true,
         message: "Attendance record created successfully",
-        data: result,
+        data: record,
       });
     } catch (error) {
       next(error);
@@ -108,7 +120,21 @@ class AttendanceController {
           month
       );
 
-      const result = await attendanceService.updateAttendanceRecord(
+      const oldRecord = await attendanceService.getAttendanceRecord(
+        userId,
+        year,
+        month
+      );
+      if (!oldRecord) {
+        return AttendanceController.resourceNotFoundResponse(
+          res,
+          userId,
+          year,
+          month
+        );
+      }
+
+      const record = await attendanceService.updateAttendanceRecord(
         userId,
         year,
         month,
@@ -118,14 +144,10 @@ class AttendanceController {
       return res.status(200).json({
         success: true,
         message: "Attendance records updated successfully",
-        data: result,
+        data: record,
       });
     } catch (error) {
-      logger.error("Error in updateAttendanceData", {
-        error: error.message,
-        stack: error.stack,
-      });
-      next();
+      next(error);
     }
   }
 
@@ -136,26 +158,55 @@ class AttendanceController {
       const userId = "user123"; // Assume this is the user ID of the logged-in user
 
       logger.info(
-        "Deleting attendance records",
-        year + "/" + month,
-        "for user",
-        userId
+        "Deleting attendance record for user: " +
+          userId +
+          " for date: " +
+          year +
+          "/" +
+          month
       );
 
-      await attendanceService.deleteAttendanceData(year, month);
+      const record = await attendanceService.deleteAttendanceRecord(
+        userId,
+        year,
+        month
+      );
+
+      if (!record) {
+        return AttendanceController.resourceNotFoundResponse(
+          res,
+          userId,
+          year,
+          month
+        );
+      }
 
       return res.status(200).json({
         success: true,
-        message: "Attendance records deleted successfully",
+        message: "Attendance record deleted successfully",
       });
     } catch (error) {
-      logger.error("Error in deleteAttendanceData", {
-        error: error.message,
-        stack: error.stack,
-      });
-      next();
+      next(error);
     }
   }
+
+  static resourceNotFoundResponse(res, userId, year, month) {
+    const notFoundMessage =
+      "No attendance records found for user: " +
+      userId +
+      " for the specified period: " +
+      year +
+      "/" +
+      month;
+    logger.warn(notFoundMessage);
+
+    return res.status(404).json({
+      success: false,
+      message: notFoundMessage,
+    });
+  }
 }
+
+// function
 
 module.exports = new AttendanceController();

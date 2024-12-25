@@ -8,12 +8,11 @@ jest.mock("../src/configs/Logger", () => {
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    debug: jest.fn()
+    debug: jest.fn(),
   };
-  
+
   return jest.fn(() => mockLoggerInstance);
 });
-
 
 describe("AttendanceService", () => {
   const mockData = {
@@ -57,8 +56,7 @@ describe("AttendanceService", () => {
   });
 
   describe("createAttendanceRecord", () => {
-    it("should create a new attendance record if it does not exist", async () => {
-      AttendanceData.findOne.mockResolvedValue(null);
+    it("should create a new attendance record", async () => {
       AttendanceData.prototype.save = jest
         .fn()
         .mockResolvedValue(mockAttendanceDoc);
@@ -70,54 +68,14 @@ describe("AttendanceService", () => {
         mockData
       );
 
-      expect(AttendanceData.findOne).toHaveBeenCalledWith({
-        userId: mockAttendanceDoc.userId,
-        year: mockAttendanceDoc.year,
-        month: mockAttendanceDoc.month,
-      });
       expect(AttendanceData.prototype.save).toHaveBeenCalled();
       expect(result).toEqual(mockAttendanceDoc);
     });
 
-    it("should throw an error if the attendance record already exists", async () => {
-      AttendanceData.findOne.mockResolvedValue(mockAttendanceDoc);
-
-      await expect(
-        AttendanceService.createAttendanceRecord(
-          mockAttendanceDoc.userId,
-          mockAttendanceDoc.year,
-          mockAttendanceDoc.month,
-          mockData
-        )
-      ).rejects.toThrow(
-        "Attendance record for user: " +
-          mockAttendanceDoc.userId +
-          " for date: " +
-          mockAttendanceDoc.year +
-          "/" +
-          mockAttendanceDoc.month +
-          " already exists"
-      );
-      expect(AttendanceData.findOne).toHaveBeenCalledWith({
-        userId: mockAttendanceDoc.userId,
-        year: mockAttendanceDoc.year,
-        month: mockAttendanceDoc.month,
-      });
-      try {
-        await AttendanceService.createAttendanceRecord(
-          mockAttendanceDoc.userId,
-          mockAttendanceDoc.year,
-          mockAttendanceDoc.month,
-          mockData
-        );
-      }
-      catch (error) {
-        expect(error.status).toBe(409);
-      }
-    });
-
     it("should log and throw an error if an error occurs during the process", async () => {
-      AttendanceData.findOne.mockRejectedValue(new Error("Database error"));
+      AttendanceData.prototype.save.mockRejectedValue(
+        new Error("Database error")
+      );
 
       await expect(
         AttendanceService.createAttendanceRecord(
@@ -132,6 +90,151 @@ describe("AttendanceService", () => {
         "Error in createAttendanceData: ",
         new Error("Database error")
       );
+    });
+  });
+
+  describe("getAttendanceRecord", () => {
+    it("should return an attendance record if exist", async () => {
+      AttendanceData.findOne = jest.fn().mockResolvedValue(mockAttendanceDoc);
+
+      const result = await AttendanceService.getAttendanceRecord(
+        mockAttendanceDoc.userId,
+        mockAttendanceDoc.year,
+        mockAttendanceDoc.month
+      );
+
+      expect(AttendanceData.findOne).toHaveBeenCalled();
+      expect(result).toEqual(mockAttendanceDoc);
+    });
+
+    it("should return null if the attendance record does not exist", async () => {
+      AttendanceData.findOne = jest.fn().mockResolvedValue(null);
+
+      const result = await AttendanceService.getAttendanceRecord(
+        mockAttendanceDoc.userId,
+        mockAttendanceDoc.year,
+        mockAttendanceDoc.month
+      );
+
+      expect(AttendanceData.findOne).toHaveBeenCalled();
+      expect(result).toBeNull();
+    });
+
+    it("should log and throw an error if an error occurs during the process", async () => {
+      AttendanceData.findOne.mockRejectedValue(new Error("Database error"));
+
+      await expect(
+        AttendanceService.getAttendanceRecord(
+          mockAttendanceDoc.userId,
+          mockAttendanceDoc.year,
+          mockAttendanceDoc.month
+        )
+      ).rejects.toThrow("Database error");
+
+      expect(loggerInstance.error).toHaveBeenCalledWith(
+        "Error in getAttendanceData: ",
+        new Error("Database error")
+      );
+    });
+  });
+  describe("updateAttendanceRecord", () => {
+    it("should update an attendance record if exist", async () => {
+      AttendanceData.findOneAndUpdate = jest
+        .fn()
+        .mockResolvedValue(mockAttendanceDoc);
+
+      const result = await AttendanceService.updateAttendanceRecord(
+        mockAttendanceDoc.userId,
+        mockAttendanceDoc.year,
+        mockAttendanceDoc.month,
+        mockData
+      );
+
+      expect(AttendanceData.findOneAndUpdate).toHaveBeenCalled();
+      expect(result).toEqual(mockAttendanceDoc);
+    });
+
+    it("should log and throw an error if an error occurs during the process", async () => {
+      AttendanceData.findOneAndUpdate.mockRejectedValue(
+        new Error("Database error")
+      );
+
+      await expect(
+        AttendanceService.updateAttendanceRecord(
+          mockAttendanceDoc.userId,
+          mockAttendanceDoc.year,
+          mockAttendanceDoc.month,
+          mockData
+        )
+      ).rejects.toThrow("Database error");
+
+      expect(loggerInstance.error).toHaveBeenCalledWith(
+        "Error in updateAttendanceRecord: ",
+        new Error("Database error")
+      );
+    });
+
+    it("should return null if the attendance record does not exist", async () => {
+      AttendanceData.findOneAndUpdate = jest.fn().mockResolvedValue(null);
+
+      const result = await AttendanceService.updateAttendanceRecord(
+        mockAttendanceDoc.userId,
+        mockAttendanceDoc.year,
+        mockAttendanceDoc.month,
+        mockData
+      );
+
+      expect(AttendanceData.findOneAndUpdate).toHaveBeenCalled();
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("deleteAttendanceRecord", () => {
+    it("should delete an attendance record if exist", async () => {
+      AttendanceData.findOneAndDelete = jest
+        .fn()
+        .mockResolvedValue(mockAttendanceDoc);
+
+      const result = await AttendanceService.deleteAttendanceRecord(
+        mockAttendanceDoc.userId,
+        mockAttendanceDoc.year,
+        mockAttendanceDoc.month
+      );
+
+      expect(AttendanceData.findOneAndDelete).toHaveBeenCalled();
+      expect(result).toEqual(mockAttendanceDoc);
+    });
+
+    it("should log and throw an error if an error occurs during the process", async () => {
+      AttendanceData.findOneAndDelete.mockRejectedValue(
+        new Error("Database error")
+      );
+
+      await expect(
+        AttendanceService.deleteAttendanceRecord(
+          mockAttendanceDoc.userId,
+          mockAttendanceDoc.year,
+          mockAttendanceDoc.month
+        )
+      ).rejects.toThrow("Database error");
+
+      expect(loggerInstance.error).toHaveBeenCalledWith(
+        "Error in deleteAttendanceRecord: ",
+        new Error("Database error")
+      );
+    });
+
+    it("should return null if the attendance record does not exist", async () => {
+      AttendanceData.findOneAndDelete = jest.fn().mockResolvedValue(null);
+
+      const result = await AttendanceService.deleteAttendanceRecord(
+        mockAttendanceDoc.userId,
+        mockAttendanceDoc.year,
+        mockAttendanceDoc.month
+      );
+
+      expect(AttendanceData.findOneAndDelete).toHaveBeenCalled();
+      expect(result).toBeNull();
     });
   });
 });
