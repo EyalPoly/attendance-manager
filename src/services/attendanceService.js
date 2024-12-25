@@ -20,26 +20,6 @@ class AttendanceService {
 
   async createAttendanceRecord(userId, year, month, data) {
     try {
-      const attendanceDataRecord = await AttendanceData.findOne({
-        userId: userId,
-        year: year,
-        month: month,
-      });
-
-      if (attendanceDataRecord !== null) {
-        const error = new Error(
-          "Attendance record for user: " +
-            userId +
-            " for date: " +
-            year +
-            "/" +
-            month +
-            " already exists"
-        );
-        error.status = 409;
-        throw error;
-      }
-
       const doc = await this.saveAttendanceDocument(userId, year, month, data);
 
       return doc;
@@ -49,9 +29,37 @@ class AttendanceService {
     }
   }
 
-  async updateAttendanceRecord(year, month, attendanceRecords) {}
+  async updateAttendanceRecord(userId, year, month, newData) {
+    try {
+      const filter = { userId, year, month };
+      const update = { data: newData };
 
-  async deleteAttendanceRecord(year, month) {}
+      const doc = await AttendanceData.findOneAndUpdate(filter, update, {
+        new: true,
+        upsert: false,
+      });
+
+      return doc;
+    } catch (error) {
+      logger.error("Error in updateAttendanceRecord: ", error);
+      throw error;
+    }
+  }
+
+  async deleteAttendanceRecord(userId, year, month) {
+    try {
+      const doc = await AttendanceData.findOneAndDelete({
+        userId: userId,
+        year: year,
+        month: month,
+      });
+
+      return doc;
+    } catch (error) {
+      logger.error("Error in deleteAttendanceRecord: ", error);
+      throw error;
+    }
+  }
 
   async saveAttendanceDocument(userId, year, month, data) {
     try {
