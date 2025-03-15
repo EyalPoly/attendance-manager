@@ -1,4 +1,4 @@
-const Logger = require("../src/configs/Logger");
+const Logger = require("../src/configs/logger");
 const winston = require("winston");
 const path = require("path");
 const fs = require("fs");

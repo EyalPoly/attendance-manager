@@ -1,18 +1,22 @@
 const express = require("express");
 require("dotenv").config();
-const Database = require("./src/configs/Database");
+const Database = require("./src/configs/database");
 const attendanceRouter = require("./src/routes/attendanceRoutes");
 const Logger = require("./src/configs/Logger");
+const secretConfigService = require("./src/services/secretConfigService");
 
 const logger = new Logger();
 
-function createApp() {
+async function createApp() {
   const app = express();
   app.use(express.json());
   app.use("/api/v1/attendance", attendanceRouter);
   app.use((req, res) => {
     res.status(404).json({ error: "Route not found" });
   });
+
+  await secretConfigService.loadSecrets();
+
   return app;
 }
 

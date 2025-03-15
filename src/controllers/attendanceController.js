@@ -207,6 +207,4 @@ class AttendanceController {
   }
 }
 
-// function
-
 module.exports = new AttendanceController();
