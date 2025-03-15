@@ -1,5 +1,6 @@
 const request = require("supertest");
 const { createApp } = require("../server");
+const secretConfigService = require("../src/services/secretConfigService");
 
 // Mock dependencies
 jest.mock("../src/configs/Logger", () => {
@@ -7,15 +8,30 @@ jest.mock("../src/configs/Logger", () => {
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    debug: jest.fn()
+    debug: jest.fn(),
   };
-  
+
   return jest.fn(() => mockLoggerInstance);
+});
+
+jest.mock("@eyal-poly/shared-logger", () => ({
+  getInstance: () => ({
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  }),
+}));
+
+jest.mock("../src/services/secretConfigService", () => {
+  return {
+    loadSecrets: jest.fn(),
+  };
 });
 
 jest.mock("../src/configs/Database", () => {
   const mockDatabaseInstance = {
-    connect: jest.fn()
+    connect: jest.fn(),
   };
 
   return jest.fn(() => mockDatabaseInstance);
@@ -38,8 +54,8 @@ jest.mock("../src/middlewares/attendanceValidation", () => ({
 
 let app;
 
-beforeAll(() => {
-  app = createApp();
+beforeAll(async () => {
+  app = await createApp();
 });
 
 afterAll(() => {

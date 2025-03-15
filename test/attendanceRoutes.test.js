@@ -2,7 +2,6 @@ const request = require("supertest");
 const { createApp } = require("../server");
 const attendanceController = require("../src/controllers/attendanceController");
 
-const app = createApp();
 
 jest.mock("../src/controllers/attendanceController");
 
@@ -14,6 +13,25 @@ jest.mock("../src/middlewares/attendanceValidation", () => ({
     next();
   },
 }));
+
+jest.mock("@eyal-poly/shared-logger", () => ({
+  getInstance: () => ({
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  }),
+}));
+
+jest.mock("../src/services/secretConfigService", () => ({
+  loadSecrets: jest.fn(),
+}));
+
+let app;
+
+beforeAll(async () => {
+  app = await createApp();
+});
 
 describe("Attendance Routes", () => {
   beforeEach(() => {
