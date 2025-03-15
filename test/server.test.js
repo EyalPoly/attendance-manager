@@ -30,7 +30,7 @@ jest.mock("../src/services/secretConfigService", () => {
   };
 });
 
-jest.mock("../src/configs/Database", () => {
+jest.mock("../src/configs/database", () => {
   const mockDatabaseInstance = {
     connect: jest.fn(),
   };
