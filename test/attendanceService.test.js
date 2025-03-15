@@ -1,17 +1,20 @@
 const AttendanceService = require("../src/services/attendanceService");
 const AttendanceData = require("../src/models/attendanceData");
-const Logger = require("../src/configs/Logger");
+const Logger = require("@eyal-poly/shared-logger");
 
 jest.mock("../src/models/attendanceData");
-jest.mock("../src/configs/Logger", () => {
+
+jest.mock("@eyal-poly/shared-logger", () => {
   const mockLoggerInstance = {
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
     debug: jest.fn(),
   };
-
-  return jest.fn(() => mockLoggerInstance);
+  
+  return {
+    getInstance: jest.fn(() => mockLoggerInstance)
+  };
 });
 
 describe("AttendanceService", () => {
@@ -47,8 +50,10 @@ describe("AttendanceService", () => {
     data: mockData,
   };
 
+  let loggerInstance;
+
   beforeEach(() => {
-    loggerInstance = new Logger();
+    loggerInstance = Logger.getInstance();
   });
 
   afterEach(() => {

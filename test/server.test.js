@@ -1,6 +1,5 @@
 const request = require("supertest");
 const { createApp } = require("../server");
-const secretConfigService = require("../src/services/secretConfigService");
 
 // Mock dependencies
 jest.mock("../src/configs/Logger", () => {

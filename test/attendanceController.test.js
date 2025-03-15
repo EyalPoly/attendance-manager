@@ -14,7 +14,14 @@ jest.mock("../src/services/attendanceService", () => ({
   deleteAttendanceRecord: jest.fn(),
 }));
 
-jest.mock("../src/configs/logger");
+jest.mock("@eyal-poly/shared-logger", () => ({
+  getInstance: () => ({
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  }),
+}));
 
 const validParams = {
   year: 2024,
