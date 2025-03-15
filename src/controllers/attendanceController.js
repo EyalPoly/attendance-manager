@@ -1,5 +1,5 @@
-const Logger = require("../configs/Logger");
-const logger = new Logger();
+const Logger = require("@eyal-poly/shared-logger");
+const logger = Logger.getInstance();
 const attendanceService = require("../services/attendanceService");
 
 class AttendanceController {

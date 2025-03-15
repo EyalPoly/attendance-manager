@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-const Logger = require("./Logger");
-const logger = new Logger();
+const Logger = require("@eyal-poly/shared-logger");
+const logger = Logger.getInstance();
 
 class Database {
   constructor() {

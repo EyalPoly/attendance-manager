@@ -2,10 +2,10 @@ const express = require("express");
 require("dotenv").config();
 const Database = require("./src/configs/database");
 const attendanceRouter = require("./src/routes/attendanceRoutes");
-const Logger = require("./src/configs/Logger");
+const Logger = require("@eyal-poly/shared-logger");
 const secretConfigService = require("./src/services/secretConfigService");
 
-const logger = new Logger();
+const logger = Logger.getInstance();
 
 async function createApp() {
   const app = express();

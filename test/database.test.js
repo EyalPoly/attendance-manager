@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-const Logger = require("../src/configs/Logger");
-const Database = require("../src/configs/Database");
+const Logger = require("@eyal-poly/shared-logger");
+const Database = require("../src/configs/database");
 
 jest.mock("mongoose", () => ({
   connect: jest.fn(),
@@ -12,15 +12,17 @@ jest.mock("mongoose", () => ({
   },
 }));
 
-jest.mock("../src/configs/Logger", () => {
+jest.mock("@eyal-poly/shared-logger", () => {
   const mockLoggerInstance = {
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
     debug: jest.fn(),
   };
-
-  return jest.fn(() => mockLoggerInstance);
+  
+  return {
+    getInstance: jest.fn(() => mockLoggerInstance)
+  };
 });
 
 describe("Database", () => {
@@ -29,7 +31,7 @@ describe("Database", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    loggerInstance = new Logger();
+    loggerInstance = Logger.getInstance();
     database = new Database();
   });
 
