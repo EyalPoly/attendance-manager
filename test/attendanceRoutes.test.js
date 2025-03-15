@@ -1,6 +1,5 @@
 const request = require("supertest");
 const { createApp } = require("../server");
-const attendanceValidation = require("../src/middlewares/attendanceValidation");
 const attendanceController = require("../src/controllers/attendanceController");
 
 const app = createApp();

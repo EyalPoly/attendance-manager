@@ -1,6 +1,5 @@
 const request = require("supertest");
 const express = require("express");
-const AttendanceController = require("../src/controllers/attendanceController");
 const attendanceService = require("../src/services/attendanceService");
 const attendanceController = require("../src/controllers/attendanceController");
 const {
