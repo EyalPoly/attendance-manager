@@ -2,7 +2,7 @@ const request = require("supertest");
 const { createApp } = require("../server");
 
 // Mock dependencies
-jest.mock("../src/configs/Logger", () => {
+jest.mock("@eyal-poly/shared-logger", () => {
   const mockLoggerInstance = {
     info: jest.fn(),
     error: jest.fn(),
@@ -10,7 +10,9 @@ jest.mock("../src/configs/Logger", () => {
     debug: jest.fn(),
   };
 
-  return jest.fn(() => mockLoggerInstance);
+  return {
+    getInstance: jest.fn(() => mockLoggerInstance),
+  };
 });
 
 jest.mock("@eyal-poly/shared-logger", () => ({
@@ -28,7 +30,7 @@ jest.mock("../src/services/secretConfigService", () => {
   };
 });
 
-jest.mock("../src/configs/Database", () => {
+jest.mock("../src/configs/database", () => {
   const mockDatabaseInstance = {
     connect: jest.fn(),
   };
